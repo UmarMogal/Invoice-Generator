@@ -25,7 +25,7 @@ function App() {
 
   // List of products or services added to the invoice
   const [products, setProducts] = useState([
-    { id: 1, name: '', qty: 1, price: 0 },
+    { id: 1, name: '', qty: 0, price: 0 },
   ])
 
   // Tax rate and discount values for the invoice
