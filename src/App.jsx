@@ -2,81 +2,91 @@ import { useState, useEffect } from 'react'
 import './App.css'
 
 function App() {
-  // --- STATE ---
+  // Keep track of all the form data using state
   const [invoiceMeta, setInvoiceMeta] = useState({
     invoiceNumber: `INV-${Math.floor(100000 + Math.random() * 900000)}`,
     date: new Date().toISOString().split('T')[0],
   })
 
+  // Supplier (your business) details
   const [supplier, setSupplier] = useState({
     name: 'TechNova Solutions',
-    address: '123 Innovation Drive, Tech Park, Silicon Valley, CA 94043',
-    contact: '+1 (555) 123-4567 | support@technova.com',
-    gst: 'GSTIN987654321',
+    address: '123 silicon Shopers Udhna Surat 394210',
+    contact: '9696609990',
+    gst: '22ABCDE1234F1Z5',
   })
 
+  // Customer (bill to) details
   const [customer, setCustomer] = useState({
     name: '',
     address: '',
     contact: '',
   })
 
+  // List of products or services added to the invoice
   const [products, setProducts] = useState([
-    { id: 1, name: 'Web Development Services', qty: 1, price: 1500 },
+    { id: 1, name: '', qty: 1, price: 0 },
   ])
 
+  // Tax rate and discount values for the invoice
   const [taxRate, setTaxRate] = useState(18)
   const [discount, setDiscount] = useState(0)
 
+  // Validation helpers — contact must be exactly 10 digits, GST must match the standard 15-char format
   const isInvalidContact = (val) => val.trim() !== '' && !/^[0-9]{10}$/.test(val.trim())
   const isInvalidGST = (val) => val.trim() !== '' && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(val.trim())
 
-  // --- CALCULATIONS ---
+  // Calculate the total for a single product row (qty x price)
   const calculateProductTotal = (qty, price) => {
     return (Number(qty) || 0) * (Number(price) || 0);
   }
 
+  // Add up all product totals to get the subtotal
   const subtotal = products.reduce(
     (acc, product) => acc + calculateProductTotal(product.qty, product.price),
     0
   );
   
+  // Work out tax amount and the final grand total after discount
   const taxAmount = (subtotal * taxRate) / 100;
   const grandTotal = subtotal + taxAmount - Number(discount);
 
-  // --- HANDLERS ---
+  // Update a specific field in a product row when the user types
   const handleProductChange = (id, field, value) => {
     setProducts(products.map(p => p.id === id ? { ...p, [field]: value } : p));
   }
 
+  // Add a new empty product row to the list
   const addProduct = () => {
     setProducts([...products, { id: Date.now(), name: '', qty: 1, price: 0 }]);
   }
 
+  // Remove a product row — at least one row must stay
   const removeProduct = (id) => {
     if (products.length > 1) {
       setProducts(products.filter(p => p.id !== id));
     }
   }
 
+  // Trigger the browser print dialog to print the invoice
   const handlePrint = () => {
     window.print();
   }
 
-  // --- RENDER ---
+  // Render the full page layout
   return (
     <div className="app-container">
-      {/* Header - Not printed */}
+      {/* Page header — shown on screen only, hidden when printing */}
       <header className="header no-print">
         <h1>Invoice Generator</h1>
         <p>Fill in the details on the left to generate a printable invoice.</p>
       </header>
 
       <div className="split-layout">
-        {/* LEFT COLUMN - FORM CONTROLS (Hidden on print) */}
+        {/* Left column — all the input forms, hidden when printing */}
         <div className="form-section no-print">
           
-          {/* Invoice Settings & Supplier */}
+          {/* Invoice number, date, and supplier details */}
           <div className="card">
             <h2 className="card-title">Invoice Details</h2>
             <div className="form-grid-2">
@@ -98,6 +108,7 @@ function App() {
               </div>
             </div>
 
+            {/* Supplier business information */}
             <h3 style={{marginTop: '20px', marginBottom: '10px', fontSize: '1rem', color: 'var(--text-muted)'}}>Your Details (Supplier)</h3>
             <div className="form-grid">
               <div className="form-group">
@@ -145,7 +156,7 @@ function App() {
             </div>
           </div>
 
-          {/* Customer Details */}
+          {/* Customer information*/}
           <div className="card">
             <h2 className="card-title">Bill To (Customer)</h2>
             <div className="form-grid">
@@ -181,7 +192,7 @@ function App() {
             </div>
           </div>
 
-          {/* Line Items */}
+          {/* Product list — each row is one item with qty, price, and total */}
           <div className="card">
             <h2 className="card-title">Products &amp; Services</h2>
             
@@ -229,7 +240,7 @@ function App() {
             <button className="btn btn-primary" onClick={addProduct} style={{marginTop: '8px'}}>+ Add Item</button>
           </div>
 
-          {/* Summary Form */}
+          {/* Tax rate and discount inputs */}
           <div className="card calculation-card">
             <h2 className="card-title">Calculations</h2>
             <div className="form-grid-2">
@@ -257,7 +268,7 @@ function App() {
           
         </div>
 
-        {/* RIGHT COLUMN - LIVE PREVIEW */}
+        {/* Right column — live invoice preview that updates as the user types */}
         <div className="preview-section">
           <div className="card no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 16px' }}>
             <span style={{fontWeight: 600, fontSize: '14px'}}>Invoice Preview</span>
@@ -265,9 +276,10 @@ function App() {
           </div>
 
           <div className="preview-wrapper">
-            {/* INVOICE ACTUAL PREVIEW / PRINT RENDER */}
+            {/* The actual invoice layout — this is what gets printed */}
             <div className="invoice-preview print-only invoice-container">
               
+              {/* Invoice title, number, and date */}
               <div className="invoice-header">
                 <div className="invoice-title-wrapper">
                   <h1>INVOICE</h1>
@@ -279,6 +291,7 @@ function App() {
                 </div>
               </div>
 
+              {/* From (supplier) and Bill To (customer) address blocks */}
               <div className="invoice-addresses">
                 <div className="address-block from-address">
                   <h3>From</h3>
@@ -296,6 +309,7 @@ function App() {
                 </div>
               </div>
 
+              {/* Product table showing description, qty, price, and amount */}
               <table className="invoice-table">
                 <thead>
                   <tr>
@@ -327,6 +341,7 @@ function App() {
                 </tbody>
               </table>
 
+              {/* Totals section — subtotal, tax, discount, and grand total */}
               <div className="invoice-totals">
                 <div className="total-row">
                   <span>Subtotal:</span>
@@ -353,8 +368,9 @@ function App() {
                 </div>
               </div>
 
+              {/* Footer message at the bottom of the invoice */}
               <div className="invoice-footer">
-                <p>Thank you for your business!</p>
+                <p>Thank you for choosing TechNova Solutions.</p>
               </div>
 
             </div>
